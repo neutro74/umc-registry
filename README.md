@@ -32,9 +32,10 @@ After acceptance, publishing mirrors the verified scripts into registry releases
 From a terminal with GitHub access:
 
 ```sh
-gh repo create neutro74/umc-registry --public --source . --remote origin --push
-gh api --method POST repos/neutro74/umc-registry/pages -f build_type=workflow
+bash setup.sh
 ```
+
+The setup script creates the public repository (or pushes to an existing empty one), enables Pages with Actions and starts publication. It never force-pushes. It requires an authenticated `gh` CLI and permission to manage the repository.
 
 Enable **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests**. Permit workflow tokens to merge catalog PRs; required human reviews would block automatic acceptance. If an organization policy prevents token writes, adjust that policy or use a scoped GitHub App token.
 
