@@ -10,6 +10,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -53,6 +54,19 @@ def download(url):
         body = response.read(MAX_SOURCE + 1)
     require(len(body) <= MAX_SOURCE, 'script exceeds 256 KB')
     return body
+
+def published_download(url):
+    # New release assets can briefly return 404 from the public download endpoint.
+    # Verify the public bytes before adding a package to the catalog.
+    for delay in (0, 1, 2, 4, 8, 16, 16, 16):
+        if delay:
+            time.sleep(delay)
+        try:
+            return download(url)
+        except urllib.error.HTTPError as e:
+            if e.code != 404:
+                raise
+    raise Invalid('published asset is not available yet: ' + url)
 
 def manifest(path, body):
     match = PATH.fullmatch(path)
@@ -201,34 +215,42 @@ def merge_pr(number, head, base):
 
 def publish(root, binary, output):
     records = read_manifests(root); api = GitHub(); output = Path(output); output.mkdir(parents=True, exist_ok=True)
-    checked = {}
-    # Prefer previously mirrored assets so deleting an author's source does not remove packages.
+    checked = {}; releases = {}
+    def release_for(data):
+        tag = data['id'] + '-' + data['version']
+        if tag not in releases:
+            try:
+                releases[tag] = api.api('/releases/tags/' + tag)
+            except urllib.error.HTTPError as e:
+                if e.code != 404:
+                    raise
+                releases[tag] = None
+        return releases[tag]
+    # Check the API before downloading; probing a nonexistent public asset can cache a 404.
+    # Existing mirrored assets keep working when the author's original source disappears.
     def mirrored(url):
         data = next(v for v in records.values() if v['source'] == url)
-        target = f"https://github.com/{api.repo}/releases/download/{data['id']}-{data['version']}/{data['id']}.umc"
-        try:
-            return download(target)
-        except urllib.error.HTTPError as e:
-            if e.code != 404:
-                raise
-            return download(url)
+        release = release_for(data)
+        if release and any(a['name'] == data['id'] + '.umc' for a in release['assets']):
+            target = f"https://github.com/{api.repo}/releases/download/{data['id']}-{data['version']}/{data['id']}.umc"
+            return published_download(target)
+        return download(url)
     for path in records:
         checked.update(validate_graph(records, [path], binary, mirrored))
     index = []; catalog = []
     for data in records.values():
         meta, body = checked[(data['id'], data['version'])]
         tag = data['id'] + '-' + data['version']; filename = data['id'] + '.umc'
-        try:
-            release = api.api('/releases/tags/' + tag)
-        except urllib.error.HTTPError as e:
-            if e.code != 404:
-                raise
+        release = release_for(data)
+        if release is None:
             release = api.api('/releases', method='POST', data={'tag_name': tag, 'name': tag, 'body': 'Sandboxed UMC plugin. SHA-256: ' + data['sha256'], 'make_latest': 'false'})
+            releases[tag] = release
         asset = next((a for a in release['assets'] if a['name'] == filename), None)
         if not asset:
             api.request(f"/repos/{api.repo}/releases/{release['id']}/assets?name={filename}", data=body, method='POST', upload=True)
         url = f'https://github.com/{api.repo}/releases/download/{tag}/{filename}'
-        require(hashlib.sha256(download(url)).hexdigest() == data['sha256'], 'published asset hash differs')
+        print('Verifying published asset: ' + tag, flush=True)
+        require(hashlib.sha256(published_download(url)).hexdigest() == data['sha256'], 'published asset hash differs')
         display = [meta['name'], meta['description'], source_owner(data['source'])]
         fields = '\t'.join(urllib.parse.quote(value, safe='') if value else '-' for value in display)
         index.append(f"{data['id']}\t{data['version']}\t{data['sha256']}\t{url}\t{fields}\n")

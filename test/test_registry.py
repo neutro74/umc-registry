@@ -29,6 +29,19 @@ class RegistryTest(unittest.TestCase):
         for path, status in [('.github/workflows/accept.yml','added'), ('plugins/example/1.0.0.json','modified'), ('tools/registry.py','added')]:
             api.rows = [dict(filename=path, status=status, changes=8)]
             with self.assertRaises(r.Invalid): api.files(1)
+    def test_release_asset_propagation(self):
+        import urllib.error
+        from unittest.mock import patch
+        missing = urllib.error.HTTPError('https://github.com/a/b/releases/download/v/p.umc',404,'Not Found',{},None)
+        with patch.object(r,'download',side_effect=[missing,missing,b'plugin bytes']) as fetch, patch.object(r.time,'sleep') as sleep:
+            self.assertEqual(r.published_download('https://github.com/a/b/releases/download/v/p.umc'),b'plugin bytes')
+            self.assertEqual(fetch.call_count,3)
+            self.assertEqual(sleep.call_count,2)
+        forbidden = urllib.error.HTTPError('https://github.com/a/b/releases/download/v/p.umc',403,'Forbidden',{},None)
+        with patch.object(r,'download',side_effect=forbidden), patch.object(r.time,'sleep') as sleep:
+            with self.assertRaises(urllib.error.HTTPError): r.published_download('https://github.com/a/b/releases/download/v/p.umc')
+            sleep.assert_not_called()
+
     def test_merge_checks_head_and_base(self):
         from unittest.mock import patch
         class API:
