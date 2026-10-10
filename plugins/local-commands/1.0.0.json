@@ -1,0 +1,6 @@
+{
+  "id": "local-commands",
+  "version": "1.0.0",
+  "sha256": "19b7b38e1f4b9c632429bd1ead24256374ba1a0985a0ac68cafd471c629ba100",
+  "source": "https://raw.githubusercontent.com/neutro74/umc/0f1a2ecacdd19ab52119fe3339439ba97e3f2683/examples/scripts/chat-commands.umc"
+}

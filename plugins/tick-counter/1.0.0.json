@@ -1,0 +1,6 @@
+{
+  "id": "tick-counter",
+  "version": "1.0.0",
+  "sha256": "a83488360b9d1869633dd8fb25835f7a1a43aa6056fc4814c6c52e7f7698afc0",
+  "source": "https://raw.githubusercontent.com/neutro74/umc/0f1a2ecacdd19ab52119fe3339439ba97e3f2683/examples/scripts/tick-counter.umc"
+}
