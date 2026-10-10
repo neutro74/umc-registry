@@ -51,7 +51,12 @@ jobs:
             gh auth setup-git
             git push origin HEAD:main
           fi
-      - run: cp -r site/. dist/
+      - name: Copy site and UMC artwork
+        run: |
+          cp -r site/. dist/
+          mkdir -p dist/assets
+          cp compiler/assets/banner.png dist/assets/banner.png
+          cp compiler/assets/logo-256.png dist/assets/logo.png
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

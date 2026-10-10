@@ -2,3 +2,4 @@ compiler/
 dist/
 __pycache__/
 *.umc
+site/assets/

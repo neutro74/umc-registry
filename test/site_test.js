@@ -24,7 +24,7 @@ vm.runInContext(fs.readFileSync('site/app.js','utf8'),context);
   ids.search.value='missing';ids.search.handlers.input();assert.equal(ids.plugins.children.length,0);
   ids.search.value='alice';ids.search.handlers.input();assert.equal(ids.plugins.children.length,1);
   const card=ids.plugins.children[0],install=card.children.find(e=>e.className==='install');
-  await install.children[1].handlers.click(); assert.equal(copied,'install coords@1.0.0');
+  await install.children[1].handlers.click(); assert.equal(copied,'umc install coords@1.0.0');
   const source='// test\nplugin "example"; version "2.0.0"; state text = "version";';
   const bytes=new TextEncoder().encode(source);
   ids.file.files=[{name:'example.umc',size:bytes.length,arrayBuffer:async()=>bytes.buffer}];

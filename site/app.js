@@ -12,23 +12,35 @@ function render() {
   const search = $('search').value.toLowerCase();
   const matches = catalog.filter(p => [p.id, p.name, p.description, p.owner, ...(p.permissions || [])].join(' ').toLowerCase().includes(search));
   $('plugins').replaceChildren(); $('count').textContent = String(matches.length);
-  $('catalog-status').textContent = matches.length ? '' : catalog.length ? 'No matching plugins.' : 'The catalog is empty. Share the first plugin below.';
+  $('catalog-status').textContent = matches.length ? '' : catalog.length ? 'No matching plugins.' : 'No plugins published yet.';
   for (const p of matches) {
-    const card = element('article', undefined, 'card');
-    card.append(element('h3', p.name), element('p', `${p.owner} · v${p.version}`), element('p', p.description || 'No description provided.', 'description'));
-    const tags = element('div', undefined, 'tags');
-    for (const permission of p.permissions) tags.append(element('span', permission, 'tag'));
-    if (!p.permissions.length) tags.append(element('span', 'no game permissions', 'tag'));
-    card.append(tags);
-    if (p.dependencies.length) card.append(element('p', `${p.dependencies.length} ${p.dependencies.length === 1 ? 'dependency' : 'dependencies'}`));
-    const command = `install ${p.id}@${p.version}`, install = element('div', undefined, 'install');
+    const card = element('article', undefined, 'plugin-row');
+    const info = element('div', undefined, 'plugin-info');
+    info.append(element('h3', p.name));
+    const version = element('p', undefined, 'plugin-version');
+    version.append(element('span', `${p.id}@${p.version}`));
+    const source = element('a', 'Source'); source.href = p.source; source.target = '_blank'; source.rel = 'noopener'; version.append(source);
+    info.append(version);
+    const defaults = {
+      'coords':'Read your current coordinates.',
+      'coords-hud':'Show your coordinates on the HUD.',
+      'local-commands':'Use .coords in chat to show your position.',
+      'tick-counter':'Count game ticks.'
+    };
+    const description = p.description || defaults[p.id];
+    if (description) info.append(element('p', description, 'plugin-description'));
+    const author = element('div', undefined, 'plugin-author');
+    const profile = element('a', p.owner); profile.href = `https://github.com/${encodeURIComponent(p.owner)}`; profile.target = '_blank'; profile.rel = 'noopener'; author.append(profile);
+    const access = element('div', p.permissions.length ? p.permissions.join(', ') : 'none', 'plugin-access');
+    access.setAttribute('aria-label', `Permissions: ${p.permissions.length ? p.permissions.join(', ') : 'none'}`);
+    card.append(info, author, access);
+    const command = `umc install ${p.id}@${p.version}`, install = element('div', undefined, 'install');
     const copy = element('button', 'Copy'); copy.type = 'button'; copy.setAttribute('aria-label', `Copy install command for ${p.name}`);
     copy.addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(command); copy.textContent = 'Copied'; }
-      catch { copy.textContent = 'Select command'; }
+      catch { copy.textContent = 'Select text'; }
     });
     install.append(element('code', command), copy); card.append(install);
-    const source = element('a', 'View source ↗'); source.href = p.source; source.target = '_blank'; source.rel = 'noopener'; card.append(source);
     $('plugins').append(card);
   }
 }
@@ -78,7 +90,7 @@ function metadata(source) {
 }
 $('submit-form').addEventListener('submit', async event => {
   event.preventDefault(); $('prepared').hidden = true; prepared = null;
-  $('form-status').className = ''; $('form-status').textContent = 'Preparing…';
+  $('form-status').className = ''; $('form-status').textContent = 'Reading file…';
   try {
     const file = $('file').files[0];
     if (!file || !file.name.endsWith('.umc') || file.size > 262144) throw Error('Choose a .umc file no larger than 256 KB.');
@@ -94,7 +106,7 @@ $('submit-form').addEventListener('submit', async event => {
     for (const [key,value] of [['Plugin',meta.id],['Version',meta.version],['SHA-256',sha256]]) $('preview').append(element('dt',key),element('dd',value));
     const query = new URLSearchParams({filename:`plugins/${meta.id}/${meta.version}.json`, value:body});
     $('github-submit').href = `https://github.com/${repo}/new/main?${query}`;
-    $('prepared').hidden = false; $('form-status').textContent = 'Ready. GitHub checks will verify the URL matches this file.';
+    $('prepared').hidden = false; $('form-status').textContent = 'Ready to submit. The checks will verify the download matches this file.';
   } catch (error) { $('form-status').className = 'error'; $('form-status').textContent = error.message; }
 });
 $('download-manifest').addEventListener('click', () => {
