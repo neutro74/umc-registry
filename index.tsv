@@ -1,1 +1,4 @@
-# id	version	sha256	url
+coords	1.0.0	3a3e4dee4dea87e1e2f4002498213b1aed16747090964a4b75bec6d91ce223b6	https://github.com/neutro74/umc-registry/releases/download/coords-1.0.0/coords.umc	Coordinates	-	neutro74
+coords-hud	1.0.0	6f657043a20046822f7105137022ac26648c902e2d13270683e44d04ea02fe16	https://github.com/neutro74/umc-registry/releases/download/coords-hud-1.0.0/coords-hud.umc	Coordinates%20HUD	-	neutro74
+local-commands	1.0.0	19b7b38e1f4b9c632429bd1ead24256374ba1a0985a0ac68cafd471c629ba100	https://github.com/neutro74/umc-registry/releases/download/local-commands-1.0.0/local-commands.umc	Local%20Chat%20Commands	-	neutro74
+tick-counter	1.0.0	a83488360b9d1869633dd8fb25835f7a1a43aa6056fc4814c6c52e7f7698afc0	https://github.com/neutro74/umc-registry/releases/download/tick-counter-1.0.0/tick-counter.umc	Tick%20Counter	-	neutro74

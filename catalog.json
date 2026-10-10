@@ -1,1 +1,68 @@
-[]
+[
+  {
+    "id": "coords",
+    "version": "1.0.0",
+    "name": "Coordinates",
+    "description": "",
+    "sha256": "3a3e4dee4dea87e1e2f4002498213b1aed16747090964a4b75bec6d91ce223b6",
+    "permissions": [
+      "player"
+    ],
+    "dependencies": [],
+    "source": "https://raw.githubusercontent.com/neutro74/umc/0f1a2ecacdd19ab52119fe3339439ba97e3f2683/examples/scripts/coords.umc",
+    "download": "https://github.com/neutro74/umc-registry/releases/download/coords-1.0.0/coords.umc",
+    "owner": "neutro74"
+  },
+  {
+    "id": "coords-hud",
+    "version": "1.0.0",
+    "name": "Coordinates HUD",
+    "description": "",
+    "sha256": "6f657043a20046822f7105137022ac26648c902e2d13270683e44d04ea02fe16",
+    "permissions": [
+      "player",
+      "render"
+    ],
+    "dependencies": [
+      {
+        "id": "coords",
+        "version": "1.0.0"
+      }
+    ],
+    "source": "https://raw.githubusercontent.com/neutro74/umc/0f1a2ecacdd19ab52119fe3339439ba97e3f2683/examples/scripts/hud.umc",
+    "download": "https://github.com/neutro74/umc-registry/releases/download/coords-hud-1.0.0/coords-hud.umc",
+    "owner": "neutro74"
+  },
+  {
+    "id": "local-commands",
+    "version": "1.0.0",
+    "name": "Local Chat Commands",
+    "description": "",
+    "sha256": "19b7b38e1f4b9c632429bd1ead24256374ba1a0985a0ac68cafd471c629ba100",
+    "permissions": [
+      "player",
+      "chat"
+    ],
+    "dependencies": [
+      {
+        "id": "coords",
+        "version": "1.0.0"
+      }
+    ],
+    "source": "https://raw.githubusercontent.com/neutro74/umc/0f1a2ecacdd19ab52119fe3339439ba97e3f2683/examples/scripts/chat-commands.umc",
+    "download": "https://github.com/neutro74/umc-registry/releases/download/local-commands-1.0.0/local-commands.umc",
+    "owner": "neutro74"
+  },
+  {
+    "id": "tick-counter",
+    "version": "1.0.0",
+    "name": "Tick Counter",
+    "description": "",
+    "sha256": "a83488360b9d1869633dd8fb25835f7a1a43aa6056fc4814c6c52e7f7698afc0",
+    "permissions": [],
+    "dependencies": [],
+    "source": "https://raw.githubusercontent.com/neutro74/umc/0f1a2ecacdd19ab52119fe3339439ba97e3f2683/examples/scripts/tick-counter.umc",
+    "download": "https://github.com/neutro74/umc-registry/releases/download/tick-counter-1.0.0/tick-counter.umc",
+    "owner": "neutro74"
+  }
+]
