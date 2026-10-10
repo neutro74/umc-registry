@@ -1,0 +1,60 @@
+name: Publish registry
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: registry-publishing
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: neutro74/umc
+          ref: 0f1a2ecacdd19ab52119fe3339439ba97e3f2683
+          path: compiler
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - run: cmake -S compiler -B compiler/build -DCMAKE_BUILD_TYPE=Release && cmake --build compiler/build --target umc --parallel 2
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/registry.py publish --umc compiler/build/umc --out dist
+      - name: Update machine-readable catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp dist/index.tsv index.tsv
+          cp dist/catalog.json catalog.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.tsv catalog.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update plugin catalog'
+            gh auth setup-git
+            git push origin HEAD:main
+          fi
+      - run: cp -r site/. dist/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - uses: actions/deploy-pages@v4
+        id: deployment

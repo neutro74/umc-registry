@@ -1,0 +1,63 @@
+name: Accept plugin submissions
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+permissions: {}
+# Process catalog submissions in sequence. Each validates the latest main snapshot.
+concurrency:
+  group: registry-submissions
+  cancel-in-progress: false
+jobs:
+  validate:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      head: ${{ steps.validate.outputs.head }}
+      base: ${{ steps.validate.outputs.base }}
+      number: ${{ steps.validate.outputs.number }}
+    steps:
+      # Never check out the submitted branch. Manifests are fetched as data by the validator.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: neutro74/umc
+          ref: 0f1a2ecacdd19ab52119fe3339439ba97e3f2683
+          path: compiler
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - run: cmake -S compiler -B compiler/build -DCMAKE_BUILD_TYPE=Release && cmake --build compiler/build --target umc --parallel 2
+      - id: validate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python3 tools/registry.py validate --umc compiler/build/umc --number "$PR_NUMBER"
+  accept:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.base }}
+          persist-credentials: false
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ needs.validate.outputs.number }}
+          CHECKED_HEAD: ${{ needs.validate.outputs.head }}
+          CHECKED_BASE: ${{ needs.validate.outputs.base }}
+        run: python3 tools/registry.py merge --number "$PR_NUMBER" --head "$CHECKED_HEAD" --base "$CHECKED_BASE"

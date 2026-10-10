@@ -1,0 +1,4 @@
+compiler/
+dist/
+__pycache__/
+*.umc
